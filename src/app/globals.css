@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  /* NVIDIA: flat paper-white canvas. No gradient mesh, no atmosphere. */
+  background: #ffffff;
+  color: #1a1a1a; /* body */
+  font-family: theme("fontFamily.sans");
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  /* Flat surface with a hairline rule + the signature green corner square. */
+  .panel {
+    @apply relative rounded-sm border border-edge bg-panel;
+  }
+  .panel::before {
+    content: "";
+    @apply absolute left-0 top-0 h-[7px] w-[7px] bg-cash;
+  }
+  .panel-2 {
+    @apply rounded-sm border border-edge bg-panel2;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-sm border border-edge bg-panel2 px-2.5 py-1 text-xs text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-sm font-bold transition;
+  }
+  .btn-cash {
+    @apply btn bg-cash text-ink hover:bg-cashdim hover:text-white active:brightness-95;
+  }
+  .btn-ghost {
+    @apply btn border border-edge bg-panel text-ink hover:border-cash hover:text-cashdim;
+  }
+  .label {
+    @apply text-[11px] font-bold uppercase tracking-wider text-muted;
+  }
+  .stat {
+    @apply font-mono tabular-nums;
+  }
+}
+
+.scanline {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(118, 185, 0, 0.05) 0px,
+    rgba(118, 185, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cccccc;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #898989;
+}

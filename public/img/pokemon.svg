@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b2a6b"/><stop offset="1" stop-color="#10101a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g)"/>
+  <g transform="translate(70,60) rotate(-8)">
+    <rect width="110" height="150" rx="10" fill="#1b1b28" stroke="#ffc24b" stroke-width="2"/>
+    <circle cx="55" cy="60" r="34" fill="#ff5c39"/>
+    <rect x="20" y="58" width="70" height="6" fill="#10101a"/>
+    <circle cx="55" cy="61" r="12" fill="#10101a"/><circle cx="55" cy="61" r="6" fill="#fff"/>
+  </g>
+  <g transform="translate(190,75) rotate(7)">
+    <rect width="110" height="150" rx="10" fill="#222232" stroke="#3ddc84" stroke-width="2"/>
+    <polygon points="55,30 70,70 50,70 65,120 30,65 50,65 40,30" fill="#ffc24b"/>
+  </g>
+  <text x="200" y="285" text-anchor="middle" fill="#8a8a99" font-family="monospace" font-size="14">trading card binder</text>
+</svg>

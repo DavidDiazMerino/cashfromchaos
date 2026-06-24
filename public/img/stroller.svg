@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#10171a"/>
+  <g fill="none" stroke="#3ddc84" stroke-width="8" stroke-linecap="round">
+    <path d="M120 90 L260 90 L240 170 L150 170 Z"/>
+    <line x1="120" y1="90" x2="100" y2="200"/>
+    <line x1="260" y1="90" x2="290" y2="110"/>
+  </g>
+  <circle cx="150" cy="210" r="22" fill="#1b1b28" stroke="#8a8a99" stroke-width="6"/>
+  <circle cx="250" cy="210" r="22" fill="#1b1b28" stroke="#8a8a99" stroke-width="6"/>
+  <text x="200" y="285" text-anchor="middle" fill="#8a8a99" font-family="monospace" font-size="14">kids stroller</text>
+</svg>

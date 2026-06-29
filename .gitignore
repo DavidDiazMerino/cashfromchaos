@@ -11,3 +11,8 @@ next-env.d.ts
 .vercel
 coverage
 item.json
+
+# Local-only: demo-video production assets + internal runtime-decision notes.
+# The generator script (scripts/) is tracked; its rendered output is not.
+docs/
+ARCHITECTURE_DECISION.md

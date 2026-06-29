@@ -84,11 +84,109 @@ See [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) for the scene-by-scene video script.
   purposes; funds release after delivery confirmation. Real test-mode Checkout
   when a key is present, otherwise simulated.
 
-## Architecture & decisions
+## Architecture
 
-- `CLAUDE.md` — full operating brief / product thesis.
-- `ARCHITECTURE_DECISION.md` — runtime/deployment recommendation (local-first →
-  optional Vercel/Supabase → optional real Hermes operator).
+CashFromChaos is a single Next.js app — React/Tailwind UI, server API routes,
+and a typed domain core. No database: an in-memory store seeds three demo items.
+The operator is swappable behind one interface, and the **`CommercePolicy` is the
+hard boundary no brain can cross.**
+
+```mermaid
+flowchart TB
+  subgraph CL["Browser · Next.js 14 App Router (React + Tailwind)"]
+    direction LR
+    SI["Seller intake /intake<br/>photos + one-line clue"]
+    OD["Ops dashboard /dashboard · /item/[id]"]
+    BS["Buyer sandbox /market<br/>negotiation chat + pay"]
+  end
+  subgraph API["API routes (server · force-dynamic)"]
+    direction LR
+    A1["/api/items"]
+    A2["/api/negotiate"]
+    A3["/api/checkout + /confirm"]
+    A4["/api/fulfillment"]
+  end
+  subgraph CORE["Domain core · src/lib"]
+    ST["In-memory store<br/>items · messages · ledger · trace"]
+    OB{{"OperatorBrain interface"}}
+    POL["CommercePolicy<br/>target/floor · auto-accept/counter<br/>human-approval floor · max spend"]
+    REG["Marketplace registry (mock)<br/>collector · reverb · wallapop · ebay · local"]
+    PAY["payments.ts<br/>held payment · payout · ledger"]
+  end
+  subgraph BR["OperatorBrain implementations"]
+    FX["FixtureBrain<br/>deterministic decisions"]
+    HB["HermesBrain<br/>extends Fixture · prose only"]
+  end
+  subgraph EXT["External / optional"]
+    HC["hermes CLI -z<br/>Nemotron via Nous Portal"]
+    ST2["Stripe test-mode Checkout<br/>(or simulated)"]
+  end
+  SI --> A1
+  BS --> A2
+  BS --> A3
+  OD -. read .-> A1
+  OD --> A4
+  A1 --> ST
+  A2 --> ST
+  A3 --> PAY
+  A4 --> ST
+  ST --> OB
+  OB -->|"=fixture (default)"| FX
+  OB -->|"=hermes"| HB
+  HB -->|"decisions via super"| FX
+  HB -. prose only .-> HC
+  FX -->|"enforces"| POL
+  FX -->|"routes via"| REG
+  PAY --> ST2
+  ST2 -. redirect .-> A3
+```
+
+**The differentiator is the policy boundary.** `FixtureBrain` owns every
+*decision* — category, price band, accept/counter/escalate, the agreed number,
+fulfillment mode and max spend — clamped to the seller's `CommercePolicy`.
+`HermesBrain` *extends* it: the live `hermes` CLI only rewrites buyer-facing
+prose and falls back to fixture text on any failure. So Hermes can make the demo
+smarter, but can never push a price below floor, overspend, or take off-platform
+payment.
+
+### Transaction lifecycle
+
+Every item moves through an explicit, observable state machine — the decision
+trace and P&L are built from these transitions:
+
+```mermaid
+stateDiagram-v2
+  [*] --> analyzed: seller intake (photos + clue)
+  analyzed --> listed: routed + priced + listing drafted
+  listed --> buyer_engaged: buyer messages
+  buyer_engaged --> offer_accepted: deal within policy
+  buyer_engaged --> escalated: below floor / scam / off-platform
+  escalated --> offer_accepted: human approves
+  offer_accepted --> paid: Stripe held payment
+  paid --> shipping_required: label generated / pickup arranged
+  shipping_required --> in_transit: seller ships
+  in_transit --> delivered: buyer confirms delivery
+  delivered --> payout_released: funds released + ledger
+  payout_released --> [*]
+```
+
+### Request flow (happy path)
+
+1. **Intake** — `POST /api/items` → `store.createItemFromIntake` runs the brain
+   pipeline `analyzeItem → chooseMarketplace → buildPolicy → draftListings`.
+2. **Negotiate** — `POST /api/negotiate` → `handleBuyerMessage` (policy-bound
+   decision + Hermes prose); a deal sets `offer-accepted`.
+3. **Pay** — `POST /api/checkout` → `payments.ts` → Stripe Checkout (or
+   simulated). Stripe redirects to `GET /api/checkout/confirm`, which holds the
+   payment and runs `decideFulfillment`.
+4. **Fulfil** — `POST /api/fulfillment` ship → deliver → payout released, ledger
+   and net P&L finalised.
+
+### Deeper docs
+
+- [`CLAUDE.md`](./CLAUDE.md) — full operating brief / product thesis.
+- [`ARCHITECTURE_DECISION.md`](./ARCHITECTURE_DECISION.md) — runtime/deployment
+  recommendation (local-first → optional Vercel/Supabase → optional real Hermes).
 
 ## Not in this MVP (by design)
 

@@ -185,13 +185,9 @@ stateDiagram-v2
 4. **Fulfil** — `POST /api/fulfillment` ship → deliver → payout released, ledger
    and net P&L finalised.
 
-## Architecture & decisions
+## Further reading
 
-- `CLAUDE.md` — full operating brief / product thesis.
-- `ARCHITECTURE_DECISION.md` — runtime/deployment recommendation (local-first →
-  optional Vercel/Supabase → Hermes operator deployment modes).
-- `docs/HACKATHON_VISUAL_ASSETS.md` — 1080p architecture and closing-card assets
-  for the submission video.
+- [`CLAUDE.md`](./CLAUDE.md) — full operating brief / product thesis.
 
 ## Not in this MVP (by design)
 

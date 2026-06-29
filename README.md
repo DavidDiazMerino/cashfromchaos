@@ -16,7 +16,8 @@ guides shipping/pickup, and releases payout on delivery.
 ## Status — working demo (local-first)
 
 This is a runnable Next.js app, not just planning docs. The full loop works
-end-to-end with deterministic decisions for a reliable demo video.
+end-to-end — **Hermes operates it live**, on a deterministic policy engine that
+keeps every take reliable for the demo video.
 
 ## Quick start
 
@@ -64,15 +65,15 @@ See [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) for the scene-by-scene video script.
 
 - **Next.js 14 (App Router) + TypeScript + Tailwind.** No DB required; an
   in-memory store seeds three demo items (collectible / music / bulky-local).
-- **`OperatorBrain` interface** (`src/lib/types.ts`) — the operator is swappable:
-  - `fixture` (default) — deterministic, reliable for the video;
-  - `hermes` (alias `llm`) — **live operator backed by the local `hermes` CLI**
-    (`src/lib/operator/llmBrain.ts` → `hermes -z`). Policy-bound by design:
-    decisions and prices stay deterministic (it extends the fixture brain), and
-    Hermes writes the buyer-facing negotiation replies, falling back to fixture
-    text on any failure. Run live with `OPERATOR_BRAIN=hermes npm run dev`
-    (uses whatever provider `hermes status` reports — no API key needed here).
-  Selected via `OPERATOR_BRAIN`.
+- **Hermes is the operator** (`OperatorBrain`, `src/lib/types.ts`). The default
+  brain is **`HermesBrain`** (`src/lib/operator/llmBrain.ts` → the local `hermes`
+  CLI, `-z` single-shot; Nemotron via Nous Portal): it runs the live model that
+  drafts the listings and negotiates with buyers. It is **built on** a
+  deterministic **policy engine** (`FixtureBrain`, its base class) that holds
+  every decision — price, accept/counter, routing, spend — inside the seller's
+  `CommercePolicy`, and is the safe fallback if the CLI is ever unavailable.
+  Selected via `OPERATOR_BRAIN` (**default `hermes`**); set
+  `OPERATOR_BRAIN=fixture` to force pure-deterministic, fully-offline mode.
 - **Marketplace-agnostic routing.** Adapters are interfaces with mock
   implementations (`src/lib/marketplace/registry.ts`): collector channel,
   music channel, generalist, global, local-pickup. Hermes picks by item.
@@ -88,8 +89,9 @@ See [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) for the scene-by-scene video script.
 
 CashFromChaos is a single Next.js app — React/Tailwind UI, server API routes,
 and a typed domain core. No database: an in-memory store seeds three demo items.
-The operator is swappable behind one interface, and the **`CommercePolicy` is the
-hard boundary no brain can cross.**
+**Hermes is the operator** behind the `OperatorBrain` interface (with a
+deterministic engine as its base class and offline fallback), and the
+**`CommercePolicy` is the hard boundary it cannot cross.**
 
 ```mermaid
 flowchart TB
@@ -113,11 +115,11 @@ flowchart TB
     REG["Marketplace registry (mock)<br/>collector · reverb · wallapop · ebay · local"]
     PAY["payments.ts<br/>held payment · payout · ledger"]
   end
-  subgraph BR["OperatorBrain implementations"]
-    FX["FixtureBrain<br/>deterministic decisions"]
-    HB["HermesBrain<br/>extends Fixture · prose only"]
+  subgraph BR["Operator brain — Hermes (default)"]
+    HB["HermesBrain<br/>live operator · listings + negotiation"]
+    FX["FixtureBrain<br/>deterministic policy engine + fallback"]
   end
-  subgraph EXT["External / optional"]
+  subgraph EXT["External services"]
     HC["hermes CLI -z<br/>Nemotron via Nous Portal"]
     ST2["Stripe test-mode Checkout<br/>(or simulated)"]
   end
@@ -131,23 +133,24 @@ flowchart TB
   A3 --> PAY
   A4 --> ST
   ST --> OB
-  OB -->|"=fixture (default)"| FX
-  OB -->|"=hermes"| HB
-  HB -->|"decisions via super"| FX
-  HB -. prose only .-> HC
+  OB -->|"=hermes (default)"| HB
+  OB -->|"=fixture (opt-out)"| FX
+  HB -->|"runs the model on"| HC
+  HB -->|"extends · bounded by"| FX
   FX -->|"enforces"| POL
   FX -->|"routes via"| REG
   PAY --> ST2
   ST2 -. redirect .-> A3
 ```
 
-**The differentiator is the policy boundary.** `FixtureBrain` owns every
-*decision* — category, price band, accept/counter/escalate, the agreed number,
-fulfillment mode and max spend — clamped to the seller's `CommercePolicy`.
-`HermesBrain` *extends* it: the live `hermes` CLI only rewrites buyer-facing
-prose and falls back to fixture text on any failure. So Hermes can make the demo
-smarter, but can never push a price below floor, overspend, or take off-platform
-payment.
+**Hermes operates; policy is the boundary.** `HermesBrain` is the operator the
+buyer talks to. It *extends* a deterministic policy engine (`FixtureBrain`), so
+every *decision* — category, price band, accept/counter/escalate, the agreed
+number, fulfillment mode and max spend — is clamped to the seller's
+`CommercePolicy`. That guardrail is exactly what lets an autonomous LLM run the
+sale safely: Hermes can never push a price below floor, overspend, or take
+off-platform payment, and if the CLI is ever unavailable the deterministic path
+keeps the operation running.
 
 ### Transaction lifecycle
 
@@ -182,11 +185,13 @@ stateDiagram-v2
 4. **Fulfil** — `POST /api/fulfillment` ship → deliver → payout released, ledger
    and net P&L finalised.
 
-### Deeper docs
+## Architecture & decisions
 
-- [`CLAUDE.md`](./CLAUDE.md) — full operating brief / product thesis.
-- [`ARCHITECTURE_DECISION.md`](./ARCHITECTURE_DECISION.md) — runtime/deployment
-  recommendation (local-first → optional Vercel/Supabase → optional real Hermes).
+- `CLAUDE.md` — full operating brief / product thesis.
+- `ARCHITECTURE_DECISION.md` — runtime/deployment recommendation (local-first →
+  optional Vercel/Supabase → Hermes operator deployment modes).
+- `docs/HACKATHON_VISUAL_ASSETS.md` — 1080p architecture and closing-card assets
+  for the submission video.
 
 ## Not in this MVP (by design)
 

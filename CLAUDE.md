@@ -530,17 +530,9 @@ The demo should show, end-to-end:
 - Use Spanish internally with David when helpful, but app/demo copy can be English for hackathon judges.
 - Avoid boilerplate patterns unless they directly improve demo reliability.
 
-## Source context from David’s Obsidian
+## Source context
 
-Related vault notes:
-
-- `/home/david/Documents/Ideas/proyectos/cashfromchaos.md`
-- `/home/david/Documents/Ideas/ideas/agente_wallapop.md`
-- `/home/david/Documents/Ideas/plans/wallapop_plan.md`
-- `/home/david/Documents/Ideas/_archivos/wallapop-informe.md`
-- `/home/david/Documents/Ideas/proyectos/merinos-lab-inventario-misiones.md`
-
-Key pre-existing facts:
+Distilled from prior private research notes. Key pre-existing facts:
 
 - Wallapop automation was already a Tier 1 idea in the vault.
 - Prior market research found little/no direct Wallapop/Vinted automation competition.

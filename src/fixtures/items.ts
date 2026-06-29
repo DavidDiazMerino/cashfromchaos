@@ -26,7 +26,7 @@ export const DEMO_INTAKES: DemoSeed[] = [
     id: "demo_pokemon",
     intake: {
       clue: "I want to sell these Pokémon cards",
-      photos: ["/img/pokemon.svg"],
+      photos: ["/img/pokemon.jpg"],
       notes: "A binder full, plus a few that look shiny.",
       answers: { language: "English", rares: "A few holos" },
     },
@@ -39,7 +39,7 @@ export const DEMO_INTAKES: DemoSeed[] = [
     id: "demo_pedal",
     intake: {
       clue: "I want to sell this guitar pedal",
-      photos: ["/img/pedal.svg"],
+      photos: ["/img/pedal.jpg"],
       notes: "Overdrive pedal, barely used.",
       answers: { working: "Works perfectly", box: "Box + adapter" },
     },
@@ -48,7 +48,7 @@ export const DEMO_INTAKES: DemoSeed[] = [
     id: "demo_furniture",
     intake: {
       clue: "I want to sell this chair / piece of furniture",
-      photos: ["/img/furniture.svg"],
+      photos: ["/img/furniture.jpg"],
       notes: "Solid wood chair, a bit heavy.",
       answers: { dims: "Standard size" },
     },

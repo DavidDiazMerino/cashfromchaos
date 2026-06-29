@@ -5,10 +5,10 @@ import { useRef, useState } from "react";
 import type { CriticalQuestion, Item } from "@/lib/types";
 
 const SAMPLE = [
-  { clue: "I want to sell these Pokémon cards", img: "/img/pokemon.svg" },
-  { clue: "I want to sell this guitar pedal", img: "/img/pedal.svg" },
-  { clue: "I want to sell this chair", img: "/img/furniture.svg" },
-  { clue: "I want to sell this kids stroller", img: "/img/stroller.svg" },
+  { clue: "I want to sell these Pokémon cards", img: "/img/pokemon.jpg" },
+  { clue: "I want to sell this guitar pedal", img: "/img/pedal.jpg" },
+  { clue: "I want to sell this chair", img: "/img/furniture.jpg" },
+  { clue: "I want to sell this kids stroller", img: "/img/stroller.jpg" },
 ];
 
 type Phase = "intake" | "questions" | "done";
@@ -16,7 +16,7 @@ type Phase = "intake" | "questions" | "done";
 export default function IntakePage() {
   const router = useRouter();
   const [clue, setClue] = useState("");
-  const [img, setImg] = useState<string>("/img/generic.svg");
+  const [img, setImg] = useState<string>("/img/generic.jpg");
   const [notes, setNotes] = useState("");
   const [phase, setPhase] = useState<Phase>("intake");
   const [busy, setBusy] = useState(false);

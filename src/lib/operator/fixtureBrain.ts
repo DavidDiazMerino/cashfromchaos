@@ -176,6 +176,10 @@ export class FixtureBrain implements OperatorBrain {
     // Don't haggle over a couple of euros: if the buyer essentially meets our
     // number, close it. ~3% of the asking price, min €2.
     const tol = Math.max(2, Math.round(p.targetPrice * 0.03));
+    // The agent's current standing ask: the most recent genuine counter, or the
+    // list price if we haven't conceded yet. Counters only ever move DOWN from
+    // here toward the buyer — we never raise our ask when the buyer bids up.
+    const standingAsk = lastCounter ?? p.targetPrice;
 
     // --- Scam / off-platform / overpayment detection ---
     const scammy = /(whatsapp|western union|bizum to|paypal friends|gift card|wire transfer|click this link|shipping company i use|overpay|cashier'?s? che(que|ck)|send.*extra|pay (you )?more than|agent will (collect|pick))/.test(
@@ -229,6 +233,26 @@ export class FixtureBrain implements OperatorBrain {
       };
     }
 
+    // --- Buyer agrees in words (no new number): close at our standing ask. ---
+    // Natural buyer behaviour ("ok, deal" / "vale, me lo quedo") must close the
+    // sale, otherwise the agent loops forever and no Stripe link is ever shown.
+    const agrees = /(\bdeal\b|\bsold\b|i'?ll take it|i will take it|i'?ll buy|let'?s do it|works for me|sounds good|that works|me lo (quedo|llevo)|lo compro|trato( hecho)?|de acuerdo|acepto|vale,? (lo|me|trato))/.test(
+      text
+    );
+    const bareYes = /^\s*(ok(ay)?|yes|yep|yeah|sure|fine|deal|s[íi]|vale|venga|hecho|done)\s*[.!]?\s*$/i.test(
+      message.text
+    );
+    if (offer === undefined && !text.includes("?") && (agrees || (bareYes && lastCounter !== undefined))) {
+      return {
+        decision: "accept",
+        price: standingAsk,
+        reply: `Great — €${standingAsk} it is. I'm sending a secure Stripe payment link now; pay today and it's yours.`,
+        reason: `Buyer accepted verbally → close at standing ask €${standingAsk}.`,
+        dealAgreed: true,
+        agreedPrice: standingAsk,
+      };
+    }
+
     // --- No price named: confident, informational ---
     if (offer === undefined) {
       return {
@@ -267,47 +291,46 @@ export class FixtureBrain implements OperatorBrain {
       };
     }
 
-    // --- Accept: strong offer, OR the buyer met our number within tolerance ---
-    const metOurCounter = lastCounter !== undefined && offer >= lastCounter - tol;
-    if (offer >= p.autoAcceptAtOrAbove - tol || metOurCounter) {
+    // --- Accept: buyer clears the auto-accept bar, OR meets our standing ask. ---
+    const metOurAsk = offer >= standingAsk - tol;
+    if (offer >= p.autoAcceptAtOrAbove - tol || metOurAsk) {
       return {
         decision: "accept",
         price: offer,
         reply: `€${offer} works — deal. I'll send a secure Stripe payment link now. Pay today and it's yours.`,
-        reason: metOurCounter
-          ? `Offer €${offer} meets our €${lastCounter} counter within €${tol} → accept (no haggling over a few euros).`
+        reason: metOurAsk
+          ? `Offer €${offer} meets our standing ask €${standingAsk} (±€${tol}) → accept (no haggling over a few euros).`
           : `Offer €${offer} ≥ auto-accept €${p.autoAcceptAtOrAbove} (±€${tol}) → accept.`,
         dealAgreed: true,
         agreedPrice: offer,
       };
     }
 
-    // --- Counter band: anchor near target, concede little, ratchet (don't cave) ---
-    // Concede only ~30% of the gap from the buyer's offer toward target, and
-    // never below our own previous counter or the policy counter-down.
-    if (offer >= p.autoCounterDownTo) {
-      const concession = p.targetPrice - (p.targetPrice - offer) * 0.3;
-      const counter = niceRound(
-        Math.min(p.targetPrice, Math.max(p.autoCounterDownTo, counterFloor, concession))
-      );
+    // --- Counter: concede HALF the gap from our standing ask toward the buyer,
+    // clamped so we never cave below the policy counter-down and — crucially —
+    // never raise the ask above where it already stands. The ask therefore
+    // ratchets DOWN toward the buyer round after round and the deal converges. ---
+    const newAsk = niceRound(
+      Math.min(standingAsk, Math.max(p.autoCounterDownTo, (standingAsk + offer) / 2))
+    );
+    // If that concession lands within a few euros of the buyer, just close it.
+    if (offer >= newAsk - tol) {
       return {
-        decision: "counter",
-        price: counter,
-        reply: firm
-          ? `€${counter}, paid today via Stripe. That's my best — it's a fair price and I've got other buyers watching.`
-          : `€${offer}'s a little under it. I can do €${counter} if you pay today via Stripe. Deal?`,
-        reason: `Offer €${offer} in counter band → counter €${counter} (concede ~30% of gap toward target €${p.targetPrice}; ratchet ≥ €${niceRound(Math.max(p.autoCounterDownTo, counterFloor))}${firm ? "; firm, round " + buyerOffers : ""}).`,
-        dealAgreed: false,
+        decision: "accept",
+        price: offer,
+        reply: `€${offer} — done. I'll send a secure Stripe payment link now; pay today and it's yours.`,
+        reason: `Counter €${newAsk} within €${tol} of offer €${offer} → accept rather than quibble.`,
+        dealAgreed: true,
+        agreedPrice: offer,
       };
     }
-
-    // --- Between floor and counter-down: hold firm, don't drift toward floor ---
-    const hold = niceRound(Math.max(p.autoCounterDownTo, counterFloor));
     return {
       decision: "counter",
-      price: hold,
-      reply: `€${offer}'s too low for the condition. €${hold} is the best I'll do and it's a fair deal — take it or leave it.`,
-      reason: `Offer €${offer} below counter-down €${p.autoCounterDownTo} but above floor → hold firm at €${hold} (no caving).`,
+      price: newAsk,
+      reply: firm
+        ? `€${newAsk}, paid today via Stripe. That's my best — fair price and I've got other buyers watching.`
+        : `€${offer}'s a little under it. I can do €${newAsk} if you pay today via Stripe. Deal?`,
+      reason: `Offer €${offer} → counter €${newAsk} (concede half the gap from standing ask €${standingAsk} toward the buyer; never below counter-down €${p.autoCounterDownTo}; never raise)${firm ? `; firm, round ${buyerOffers}` : ""}.`,
       dealAgreed: false,
     };
   }

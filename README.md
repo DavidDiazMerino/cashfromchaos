@@ -35,7 +35,14 @@ npm run start        # serve the production build
 
 No environment variables are required — payments run in a fully **simulated
 held-payment** mode out of the box. To use real Stripe test-mode Checkout, copy
-`.env.example` to `.env.local` and set `STRIPE_SECRET_KEY` (sk_test_…).
+`.env.example` to `.env.local` and set `STRIPE_SECRET_KEY` (sk_test_…). In test
+mode pay with card `4242 4242 4242 4242`, any future expiry, any CVC. The
+post-payment redirect returns to whatever host you opened the app from (handy
+when serving to a phone over a LAN / Tailscale address, not just localhost).
+
+**Mobile full-screen:** the app ships a web manifest, so on a phone you can use
+Chrome/Safari → *Add to Home Screen* to launch it standalone, without the
+browser address bar.
 
 ## What to click (demo path)
 
@@ -88,3 +95,16 @@ See [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) for the scene-by-scene video script.
 Real marketplace automation, legal escrow, multi-user auth, whole-room
 inventory scanning. The differentiator is **policy-bound autonomous commerce
 over messy physical inventory**, demoed as a reliable, cinematic loop.
+
+## Image credits
+
+Demo item photos are Creative Commons, used as placeholders for the sample
+inventory. Attribution per their licenses:
+
+| Image | Author | License | Source |
+|-------|--------|---------|--------|
+| `public/img/pokemon.jpg` | Klapi | CC BY-SA 4.0 | [Wikimedia Commons](https://commons.wikimedia.org/w/index.php?curid=119486616) |
+| `public/img/pedal.jpg` | Guitar Chalk | CC BY 2.0 | [Wikimedia Commons](https://commons.wikimedia.org/w/index.php?curid=81493678) |
+| `public/img/furniture.jpg` | Steven V. Rose | CC BY-SA 3.0 | [Wikimedia Commons](https://commons.wikimedia.org/w/index.php?curid=2385247) |
+| `public/img/stroller.jpg` | Ciara Ní Riain | CC BY-SA 4.0 | [Wikimedia Commons](https://commons.wikimedia.org/w/index.php?curid=191950513) |
+| `public/img/generic.jpg` | StockSnap | CC0 | [StockSnap](https://stocksnap.io/photo/white-room-Y5OWUE5TW7) |

@@ -14,7 +14,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No agreed price yet" }, { status: 400 });
   }
 
-  const session = await createCheckout(item);
+  // Build the post-payment redirect from the host the buyer actually used, so
+  // Stripe returns them to the same address (Tailscale IP / MagicDNS / localhost).
+  const host = req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "");
+  const origin = host ? `${proto}://${host}` : undefined;
+
+  const session = await createCheckout(item, origin);
   item.payment = {
     ...item.payment,
     provider: session.provider,

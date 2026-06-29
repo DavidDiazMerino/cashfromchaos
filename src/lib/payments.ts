@@ -23,18 +23,25 @@ export function baseUrl(): string {
  * buyer to. Uses real Stripe test mode if STRIPE_SECRET_KEY is present, else a
  * simulated success URL handled inside the app.
  */
-export async function createCheckout(item: Item): Promise<{
+export async function createCheckout(
+  item: Item,
+  origin?: string
+): Promise<{
   url: string;
   sessionId: string;
   provider: "stripe" | "simulated";
 }> {
+  // Redirect back to the exact host the buyer is using (Tailscale IP, MagicDNS
+  // name, or localhost), falling back to NEXT_PUBLIC_BASE_URL. This avoids the
+  // Next.js gotcha where NEXT_PUBLIC_* gets frozen into the build at build time.
+  const base = origin || baseUrl();
   const amount = item.payment.amount;
   if (!stripeConfigured()) {
     const sessionId = `sim_${item.id}`;
     return {
       provider: "simulated",
       sessionId,
-      url: `${baseUrl()}/api/checkout/confirm?item=${item.id}&session=${sessionId}&sim=1`,
+      url: `${base}/api/checkout/confirm?item=${item.id}&session=${sessionId}&sim=1`,
     };
   }
   // Real Stripe test-mode Checkout.
@@ -56,14 +63,14 @@ export async function createCheckout(item: Item): Promise<{
         },
       },
     ],
-    success_url: `${baseUrl()}/api/checkout/confirm?item=${item.id}&session={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl()}/market/${item.id}?canceled=1`,
+    success_url: `${base}/api/checkout/confirm?item=${item.id}&session={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${base}/market/${item.id}?canceled=1`,
     metadata: { itemId: item.id },
   });
   return {
     provider: "stripe",
     sessionId: session.id,
-    url: session.url ?? `${baseUrl()}/market/${item.id}`,
+    url: session.url ?? `${base}/market/${item.id}`,
   };
 }
 

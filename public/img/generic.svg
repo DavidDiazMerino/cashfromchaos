@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
-  <rect width="400" height="300" fill="#121217"/>
-  <rect x="140" y="100" width="120" height="100" rx="10" fill="#1b1b28" stroke="#3ddc84" stroke-width="3"/>
-  <text x="200" y="165" text-anchor="middle" fill="#3ddc84" font-family="monospace" font-size="44">?</text>
-  <text x="200" y="285" text-anchor="middle" fill="#8a8a99" font-family="monospace" font-size="14">pre-owned item</text>
-</svg>

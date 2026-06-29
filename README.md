@@ -185,10 +185,6 @@ stateDiagram-v2
 4. **Fulfil** — `POST /api/fulfillment` ship → deliver → payout released, ledger
    and net P&L finalised.
 
-## Further reading
-
-- [`CLAUDE.md`](./CLAUDE.md) — full operating brief / product thesis.
-
 ## Not in this MVP (by design)
 
 Real marketplace automation, legal escrow, multi-user auth, whole-room
